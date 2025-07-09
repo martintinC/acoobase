@@ -1,0 +1,27 @@
+{% extends "cahierDeSorties/base.html" %}
+{% load static %}
+
+{% block title %}Statistiques Bateaux{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">⛵ Statistiques des Bateaux</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Bateau</th>
+                <th>Nombre de sorties</th>
+                <th>Distance totale parcourue (km)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bateau in stats %}
+                <tr>
+                    <td>{{ bateau.nom }}</td>
+                    <td>{{ bateau.nombre_sorties }}</td>
+                    <td>{{ bateau.total_distance }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

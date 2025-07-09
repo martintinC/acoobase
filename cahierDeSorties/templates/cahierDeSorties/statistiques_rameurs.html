@@ -1,0 +1,42 @@
+{% extends "cahierDeSorties/base.html" %}
+{% load static %}
+
+{% block title %}Statistiques rameurs{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">📊 Statistiques rameurs</h1>
+
+    <!-- Formulaire de sélection -->
+    <form method="GET" class="d-flex justify-content-center align-items-center gap-2 mb-4">
+        <select name="rameur_id" class="form-select w-auto">
+            <option value="">Sélectionner un rameur</option>
+            {% for rameur in rameurs %}
+                <option value="{{ rameur.id }}" {% if rameur.id|stringformat:"s" == selected_rameur_id %}selected{% endif %}>
+                    {{ rameur.nom }} {{ rameur.prenom }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="year" class="form-select w-auto">
+            <option value="current" {% if selected_year == "current" %}selected{% endif %}>Année en cours</option>
+            <option value="total" {% if selected_year == "total" %}selected{% endif %}>Total</option>
+            {% for year in years %}
+                <option value="{{ year }}" {% if selected_year == year|stringformat:"s" %}selected{% endif %}>{{ year }} - {{ year|add:1 }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary">Afficher</button>
+    </form>
+
+    {% if selected_rameur %}
+        <h2 class="text-center">Statistiques de {{ selected_rameur.prenom }} {{ selected_rameur.nom }}</h2>
+        <p class="text-center">📅 Année : {% if selected_year == "total" %}Total{% else %}{{ selected_year }} - {{ selected_year|add:1 }}{% endif %}</p>
+
+        <ul class="list-group">
+            <li class="list-group-item">📆 Nombre de sorties : <strong>{{ nombre_sorties }}</strong></li>
+            <li class="list-group-item">🚣‍♂️ Distance totale parcourue : <strong>{{ total_kilometres }} km</strong></li>
+            <li class="list-group-item">📏 Moyenne des distances : <strong>{{ moyenne_distances }} km/sortie</strong></li>
+            <li class="list-group-item">⛵ Bateau préféré : <strong>{% if bateau_prefere %}{{ bateau_prefere.nom }}{% else %}Aucun{% endif %}</strong></li>
+        </ul>
+    {% endif %}
+{% endblock %}

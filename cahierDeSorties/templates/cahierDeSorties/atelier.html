@@ -1,0 +1,65 @@
+{% extends "cahierDeSorties/base.html" %}
+
+{% block title %}Atelier - Suivi des Incidents{% endblock %}
+
+{% block content %}
+    <h1 class="text-center mb-4">🔧 Atelier - Suivi des Incidents</h1>
+
+    <!-- Incidents en cours -->
+    <h2 class="mt-4">🚨 Incidents en cours</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Bateau</th>
+                <th>Description</th>
+                <th>Date Signalement</th>
+                <th>Créateur</th>
+                <th>Immobilisé</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents_en_cours %}
+                <tr>
+                    <td>{{ incident.bateau.nom }}</td>
+                    <td>{{ incident.description }}</td>
+                    <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
+                    <td>{{ incident.createur.prenom }} {{ incident.createur.nom }}</td>
+                    <td>{% if incident.bateau_immobilise %}❌ Oui{% else %}✅ Non{% endif %}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Aucun incident en cours.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Incidents clôturés -->
+    <h2 class="mt-4">✅ Incidents clôturés</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Bateau</th>
+                <th>Description</th>
+                <th>Date Signalement</th>
+                <th>Date Clôture</th>
+                <th>Commentaire</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents_clotures %}
+                <tr>
+                    <td>{{ incident.bateau.nom }}</td>
+                    <td>{{ incident.description }}</td>
+                    <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
+                    <td>{{ incident.date_cloture|date:"d/m/Y H:i" }}</td>
+                    <td>{{ incident.commentaire|default:"-" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">Aucun incident clôturé.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
