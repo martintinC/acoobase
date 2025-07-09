@@ -40,24 +40,6 @@
         </ul>
     {% endif %}
 
-    <h3>Kilomètres par type de bateau</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Type de bateau</th>
-                <th>Distance (km)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in km_par_type_bateau %}
-                <tr>
-                    <td>{{ entry.type_bateau }}</td>
-                    <td>{{ entry.total_km|floatformat:2 }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
     <canvas id="myChart" width="400" height="200"></canvas>
     
     <script>
@@ -68,7 +50,6 @@
             data: {
             labels: [],
             datasets: [{
-                label: 'Couleurs préférées',
                 data: [],
                 backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
@@ -97,17 +78,22 @@
             }
             }
         });
+        const kmParTypeBateau = [];
 
-        const kmParTypeBateau = JSON.parse('{{ km_par_type_bateau|safe }}');
+        {%for entry in km_par_type_bateau %}
+            kmParTypeBateau.push({
+                label: "{{ entry.type_bateau }}",
+                km: "{{ entry.total_km|floatformat:2 }}"
+            });
+        {% endfor %}
 
-        // kmParTypeBateau.forEach((item) => {
-        //     console.log(type);
-        //     console.log(total_km);
-        //     myChart.data.labels.push(type);
-        //     myChart.data.datasets[0].data.push(total_km);
-        //     myChart.update();
-        // });
-        
+        kmParTypeBateau.forEach((elem) => {
+            myChart.data.labels.push(elem["label"]);
+            myChart.data.datasets[0].data.push(elem["km"]);
+            myChart.update();
+        });
     </script>
 
 {% endblock %}
+
+
