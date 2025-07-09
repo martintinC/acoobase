@@ -10,6 +10,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from datetime import datetime, date
 from django.db.models import Count, Sum
+from .services.statistiques import kilometres_par_type_bateau
 import calendar
 
 # =========================================================================================
@@ -196,8 +197,10 @@ def statistiques_rameurs(request):
     distance_par_mois = {month: 0 for month in range(1, 13)}
 
     if selected_rameur_id:
-        selected_rameur = Rameur.objects.get(id=selected_rameur_id)
-        sorties_rameur = sorties_rameur.filter(rameur=selected_rameur)
+        selected_rameur = Rameur.objects.get(id=selected_rameur_id)  
+        # Récupération des kilomètres par type de bateau
+        km_par_type_bateau = kilometres_par_type_bateau(selected_rameur_id, int(selected_year) if selected_year != 'current' else current_year)
+        sorties_rameur = sorties_rameur.filter(rameur=selected_rameur)       
 
         nombre_sorties = sorties_rameur.count()
         total_kilometres = sorties_rameur.aggregate(total=Sum('sortie__distance'))['total'] or 0
@@ -224,7 +227,8 @@ def statistiques_rameurs(request):
             'years': years,
             'selected_year': selected_year,
             'distance_par_mois': list(distance_par_mois.values()),  # Envoyer les valeurs au template
-            'mois_labels': [calendar.month_abbr[m] for m in range(1, 13)]  # Labels des mois
+            'mois_labels': [calendar.month_abbr[m] for m in range(1, 13)],  # Labels des mois
+            'km_par_type_bateau': km_par_type_bateau
         })
 
     return render(request, "cahierDeSorties/statistiques_rameurs.html", {
