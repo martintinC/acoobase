@@ -38,9 +38,11 @@
             <li class="list-group-item">📏 Moyenne des distances : <strong>{{ moyenne_distances }} km/sortie</strong></li>
             <li class="list-group-item">⛵ Bateau préféré : <strong>{% if bateau_prefere %}{{ bateau_prefere.nom }}{% else %}Aucun{% endif %}</strong></li>
         </ul>
-    {% endif %}
 
-    <canvas id="myChart" width="400" height="200"></canvas>
+        <br>
+
+        <canvas id="myChart" width="400" height="200"></canvas>
+    {% endif %}
     
     <script>
         const ctx = document.getElementById('myChart').getContext('2d');
@@ -50,6 +52,7 @@
             data: {
             labels: [],
             datasets: [{
+                label : "kilomètres parcourus",
                 data: [],
                 backgroundColor: [
                 'rgba(255, 99, 132, 0.2)',
@@ -71,16 +74,21 @@
             }]
             },
             options: {
-            scales: {
-                y: {
-                beginAtZero: true
+                plugins:{
+                    legend:{
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                    beginAtZero: true
+                    }
                 }
-            }
             }
         });
         const kmParTypeBateau = [];
 
-        {%for entry in km_par_type_bateau %}
+        {% for entry in km_par_type_bateau %}
             kmParTypeBateau.push({
                 label: "{{ entry.type_bateau }}",
                 km: "{{ entry.total_km|floatformat:2 }}"
