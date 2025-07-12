@@ -242,21 +242,54 @@ def statistiques_rameurs(request):
 # Page des statistiques bateaux
 # =========================================================================================
 def statistiques_bateaux(request):
-    # Récupération des statistiques par bateau
+    selected_year = request.GET.get('year', 'current')
+
+    today = date.today()
+    current_year = today.year if today.month >= 9 else today.year - 1
+    years = list(range(current_year, current_year - 5, -1))
+
+    start_date, end_date = None, None
+
+    if selected_year == 'current':
+        start_date = date(current_year, 9, 1)
+        end_date = date(current_year + 1, 8, 31)
+    elif selected_year == 'total':
+        start_date, end_date = None, None
+    else:
+        try:
+            selected_year_int = int(selected_year)
+            start_date = date(selected_year_int, 9, 1)
+            end_date = date(selected_year_int + 1, 8, 31)
+        except ValueError:
+            selected_year = 'current'
+            start_date = date(current_year, 9, 1)
+            end_date = date(current_year + 1, 8, 31)
+
     bateaux = Bateau.objects.all()
-    
     stats = []
     for bateau in bateaux:
-        total_distance = Sortie.objects.filter(bateau=bateau).aggregate(Sum('distance'))['distance__sum'] or 0
-        nombre_sorties = Sortie.objects.filter(bateau=bateau).count()
-        
+        sorties = Sortie.objects.filter(bateau=bateau)
+        if start_date and end_date:
+            sorties = sorties.filter(debut__date__range=(start_date, end_date))
+
+        total_distance = sorties.aggregate(Sum('distance'))['distance__sum'] or 0
+        nombre_sorties = sorties.count()
+
         stats.append({
             "nom": bateau.nom,
             "total_distance": total_distance,
             "nombre_sorties": nombre_sorties
         })
-    
-    return render(request, "cahierDeSorties/statistiques_bateaux.html", {"stats": stats})
+
+    stats = sorted(stats, key=lambda x: x['total_distance'], reverse=True)
+
+    context = {
+        "stats": stats,
+        "years": years,
+        "selected_year": selected_year,
+    }
+    return render(request, "cahierDeSorties/statistiques_bateaux.html", context)
+
 
 
 # =========================================================================================
