@@ -173,9 +173,9 @@ def historique_sorties(request):
     try:
         per_page = int(per_page)
         if per_page not in PER_PAGE_CHOICES:
-            per_page = 10
+            per_page = 5
     except (TypeError, ValueError):
-        per_page = 10
+        per_page = 5
 
     paginator = Paginator(sorties_list, per_page)
     page_number = request.GET.get('page')
