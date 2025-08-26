@@ -20,6 +20,9 @@
                 </select>
             </div>
             <button type="submit" class="btn btn-primary ms-3">Filtrer</button>
+            {% if request.GET.date_debut %}
+                <a href="{% url 'historique_sorties' %}{% if request.GET.per_page %}?per_page={{ request.GET.per_page }}{% endif %}" class="btn btn-secondary ms-2">Réinitialiser la date</a>
+            {% endif %}
         </form>
     </div>
 
