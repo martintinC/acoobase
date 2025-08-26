@@ -6,11 +6,18 @@
 {% block content %}
     <h1 class="text-center mb-4">📜 Historique des sorties</h1>
 
-    <!-- Sélecteur de dates -->
+    <!-- Sélecteur de dates et du nombre de sorties par page -->
     <div class="d-flex justify-content-center my-3 align-items-center">
         <form method="GET" action="{% url 'historique_sorties' %}" class="d-flex align-items-center">
             <div class="me-2">
                 <input type="date" id="dateDebut" name="date_debut" class="form-control w-auto" value="{{ request.GET.date_debut }}">
+            </div>
+            <div class="me-2">
+                <select name="per_page" class="form-select w-auto" onchange="this.form.submit()">
+                    {% for n in per_page_choices %}
+                        <option value="{{ n }}" {% if request.GET.per_page|stringformat:"s" == n|stringformat:"s" %}selected{% endif %}>{{ n }} par page</option>
+                    {% endfor %}
+                </select>
             </div>
             <button type="submit" class="btn btn-primary ms-3">Filtrer</button>
         </form>
@@ -50,6 +57,40 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        {% if sorties.has_other_pages %}
+            <nav aria-label="Pagination">
+                <ul class="pagination justify-content-center">
+                    {% if sorties.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if request.GET.date_debut %}date_debut={{ request.GET.date_debut }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}&{% endif %}page={{ sorties.previous_page_number }}" aria-label="Précédent">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                    {% endif %}
+                    {% for num in sorties.paginator.page_range %}
+                        {% if sorties.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% else %}
+                            <li class="page-item">
+                                <a class="page-link" href="?{% if request.GET.date_debut %}date_debut={{ request.GET.date_debut }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}&{% endif %}page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if sorties.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if request.GET.date_debut %}date_debut={{ request.GET.date_debut }}&{% endif %}{% if request.GET.per_page %}per_page={{ request.GET.per_page }}&{% endif %}page={{ sorties.next_page_number }}" aria-label="Suivant">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
     {% else %}
         <div class="alert alert-info text-center">
             Aucune sortie enregistrée dans l'historique 📅.

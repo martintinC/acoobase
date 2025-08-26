@@ -11,6 +11,9 @@ from django.utils.dateparse import parse_datetime
 from datetime import datetime, date
 from django.db.models import Count, Sum
 from .services.statistiques import kilometres_par_type_bateau
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from .models import Sortie
 import calendar
 
 # =========================================================================================
@@ -147,15 +150,41 @@ def get_rameurs(request, bateau_id):
 # =========================================================================================
 # Récupération des rameurs en fonction du bateau sélectionné
 # =========================================================================================
-def historique_sorties(request):
-    date_debut = request.GET.get("date_debut")
+# def historique_sorties(request):
+#     date_debut = request.GET.get("date_debut")
     
-    sorties = Sortie.objects.filter(fin__isnull=False).order_by('-debut')  # Trie par date de début décroissante
+#     sorties = Sortie.objects.filter(fin__isnull=False).order_by('-debut')  # Trie par date de début décroissante
 
+#     if date_debut:
+#         sorties = sorties.filter(debut__date=date_debut)
+
+#     return render(request, "cahierDeSorties/historique_sorties.html", {"sorties": sorties})
+
+PER_PAGE_CHOICES = [5, 10, 20, 50, 100]
+
+def historique_sorties(request):
+    sorties_list = Sortie.objects.all().order_by('-debut')
+    date_debut = request.GET.get('date_debut')
     if date_debut:
-        sorties = sorties.filter(debut__date=date_debut)
+        sorties_list = sorties_list.filter(debut__date=date_debut)
 
-    return render(request, "cahierDeSorties/historique_sorties.html", {"sorties": sorties})
+    # Récupère le nombre de sorties par page (par défaut 10)
+    per_page = request.GET.get('per_page')
+    try:
+        per_page = int(per_page)
+        if per_page not in PER_PAGE_CHOICES:
+            per_page = 10
+    except (TypeError, ValueError):
+        per_page = 10
+
+    paginator = Paginator(sorties_list, per_page)
+    page_number = request.GET.get('page')
+    sorties = paginator.get_page(page_number)
+
+    return render(request, 'cahierDeSorties/historique_sorties.html', {
+        'sorties': sorties,
+        'per_page_choices': PER_PAGE_CHOICES,
+    })
 
 
 # =========================================================================================
