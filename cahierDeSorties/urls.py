@@ -1,6 +1,16 @@
 from django.urls import path
-from . import views  # Importation des vues
-from .views import sorties_en_cours, ajouter_sortie, get_rameurs, supprimer_sortie, valider_sortie, historique_sorties, statistiques_rameurs, statistiques_bateaux, leaderboard, atelier
+from .views import (
+    sorties_en_cours,
+    ajouter_sortie,
+    get_rameurs,
+    supprimer_sortie,
+    valider_sortie,
+    historique_sorties,
+    statistiques_rameurs,
+    statistiques_bateaux,
+    leaderboard,
+    atelier,
+)
 
 urlpatterns = [
     path('sorties/', sorties_en_cours, name='sorties_en_cours'),  # Page des sorties en cours
