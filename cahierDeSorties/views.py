@@ -13,8 +13,10 @@ from django.db.models import Count, Sum
 from .services.statistiques import kilometres_par_type_bateau
 from django.core.paginator import Paginator
 from django.shortcuts import render
-from .models import Sortie
+from .models import Bateau, Sortie
 import calendar
+
+PER_PAGE_CHOICES = [5, 10, 20, 50, 100]
 
 # =========================================================================================
 # API : Récupération des données
@@ -150,18 +152,6 @@ def get_rameurs(request, bateau_id):
 # =========================================================================================
 # Récupération des rameurs en fonction du bateau sélectionné
 # =========================================================================================
-# def historique_sorties(request):
-#     date_debut = request.GET.get("date_debut")
-    
-#     sorties = Sortie.objects.filter(fin__isnull=False).order_by('-debut')  # Trie par date de début décroissante
-
-#     if date_debut:
-#         sorties = sorties.filter(debut__date=date_debut)
-
-#     return render(request, "cahierDeSorties/historique_sorties.html", {"sorties": sorties})
-
-PER_PAGE_CHOICES = [5, 10, 20, 50, 100]
-
 def historique_sorties(request):
     sorties_list = Sortie.objects.all().order_by('-debut')
     date_debut = request.GET.get('date_debut')
@@ -271,55 +261,66 @@ def statistiques_rameurs(request):
 # Page des statistiques bateaux
 # =========================================================================================
 def statistiques_bateaux(request):
+    # Récupération de l'année sélectionnée
     selected_year = request.GET.get('year', 'current')
+    # Récupération du nombre d'éléments par page
+    per_page = request.GET.get('per_page')
+    try:
+        per_page = int(per_page)
+        if per_page not in PER_PAGE_CHOICES:
+            per_page = 10
+    except (TypeError, ValueError):
+        per_page = 10
 
-    today = date.today()
-    current_year = today.year if today.month >= 9 else today.year - 1
-    years = list(range(current_year, current_year - 5, -1))
+    # Récupération des années disponibles (exemple)
+    years = [d.year for d in Sortie.objects.dates('debut', 'year', order='DESC')]
 
-    start_date, end_date = None, None
-
-    if selected_year == 'current':
-        start_date = date(current_year, 9, 1)
-        end_date = date(current_year + 1, 8, 31)
-    elif selected_year == 'total':
-        start_date, end_date = None, None
+    # Filtrage des stats selon l'année sélectionnée
+    if selected_year == "total":
+        sorties = Sortie.objects.all()
+    elif selected_year == "current":
+        from datetime import date
+        today = date.today()
+        # Année scolaire : septembre à août
+        if today.month >= 9:
+            start = date(today.year, 9, 1)
+            end = date(today.year + 1, 8, 31)
+        else:
+            start = date(today.year - 1, 9, 1)
+            end = date(today.year, 8, 31)
+        sorties = Sortie.objects.filter(debut__date__gte=start, debut__date__lte=end)
     else:
         try:
-            selected_year_int = int(selected_year)
-            start_date = date(selected_year_int, 9, 1)
-            end_date = date(selected_year_int + 1, 8, 31)
-        except ValueError:
-            selected_year = 'current'
-            start_date = date(current_year, 9, 1)
-            end_date = date(current_year + 1, 8, 31)
+            year = int(selected_year)
+            start = date(year, 9, 1)
+            end = date(year + 1, 8, 31)
+            sorties = Sortie.objects.filter(debut__date__gte=start, debut__date__lte=end)
+        except Exception:
+            sorties = Sortie.objects.none()
 
-    bateaux = Bateau.objects.all()
-    stats = []
-    for bateau in bateaux:
-        sorties = Sortie.objects.filter(bateau=bateau)
-        if start_date and end_date:
-            sorties = sorties.filter(debut__date__range=(start_date, end_date))
+    # Calcul des stats par bateau
+    stats_dict = {}
+    for sortie in sorties.select_related('bateau'):
+        bateau = sortie.bateau
+        if bateau not in stats_dict:
+            stats_dict[bateau] = {'nom': bateau.nom, 'nombre_sorties': 0, 'total_distance': 0.0}
+        stats_dict[bateau]['nombre_sorties'] += 1
+        stats_dict[bateau]['total_distance'] += float(sortie.distance or 0)
 
-        total_distance = sorties.aggregate(Sum('distance'))['distance__sum'] or 0
-        nombre_sorties = sorties.count()
+    stats_list = list(stats_dict.values())
+    stats_list.sort(key=lambda b: b['nom'])
 
-        stats.append({
-            "nom": bateau.nom,
-            "total_distance": total_distance,
-            "nombre_sorties": nombre_sorties
-        })
+    # Pagination
+    paginator = Paginator(stats_list, per_page)
+    page_number = request.GET.get('page')
+    stats_page = paginator.get_page(page_number)
 
-    stats = sorted(stats, key=lambda x: x['total_distance'], reverse=True)
-
-    context = {
-        "stats": stats,
-        "years": years,
-        "selected_year": selected_year,
-    }
-    return render(request, "cahierDeSorties/statistiques_bateaux.html", context)
-
-
+    return render(request, 'cahierDeSorties/statistiques_bateaux.html', {
+        'stats': stats_page,
+        'years': years,
+        'selected_year': selected_year,
+        'per_page_choices': PER_PAGE_CHOICES,
+    })
 
 # =========================================================================================
 # Page du leaderboard

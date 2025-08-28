@@ -16,6 +16,14 @@
         {% endfor %}
     </select>
 
+    <div class="ms-2">
+        <select name="per_page" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+            {% for n in per_page_choices %}
+                <option value="{{ n }}" {% if request.GET.per_page|stringformat:"s" == n|stringformat:"s" %}selected{% endif %}>{{ n }} par page</option>
+            {% endfor %}
+        </select>
+    </div>
+
     <input type="text" id="searchInput" placeholder="Rechercher un bateau..." class="form-control form-control-sm w-auto ms-3" style="min-width: 200px;">
 </form>
 
@@ -34,13 +42,47 @@
                 <td>{{ bateau.nombre_sorties }}</td>
                 <td>{{ bateau.total_distance|floatformat:2 }}</td>
             </tr>
-        {% empty %}
+            {% empty %}
             <tr>
                 <td colspan="3" class="text-center">Aucune donnée disponible pour cette période.</td>
             </tr>
         {% endfor %}
     </tbody>
 </table>
+
+{% if stats.has_other_pages %}
+<nav aria-label="Pagination">
+    <ul class="pagination justify-content-center">
+        {% if stats.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?year={{ selected_year }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}&page={{ stats.previous_page_number }}" aria-label="Précédent">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+        {% endif %}
+        {% for num in stats.paginator.page_range %}
+            {% if stats.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?year={{ selected_year }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}&page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+        {% if stats.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?year={{ selected_year }}{% if request.GET.per_page %}&per_page={{ request.GET.per_page }}{% endif %}&page={{ stats.next_page_number }}" aria-label="Suivant">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
 
 <script src="{% static 'js/statistiques_bateaux.js' %}"></script>
 {% endblock %}
