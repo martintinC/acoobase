@@ -4,7 +4,7 @@
 {% block title %}Statistiques Bateaux{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">⛵ Statistiques des Bateaux</h1>
+<h1 class="text-center mb-4">🚤 Bateaux</h1>
 
 <form method="get" class="mb-4 d-flex align-items-center gap-3 justify-content-center flex-wrap">
     <label for="yearSelect" class="mb-0 fw-semibold">Année scolaire :</label>
@@ -15,6 +15,13 @@
             <option value="{{ year }}" {% if selected_year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ year }} - {{ year|add:"1" }}</option>
         {% endfor %}
         <option value="all" {% if request.GET.per_page == "all" %}selected{% endif %}>Tous</option>
+    </select>
+
+    <label for="sortSelect" class="mb-0 fw-semibold">Trier par :</label>
+    <select name="sort" id="sortSelect" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+        <option value="nom" {% if request.GET.sort == "nom" or not request.GET.sort %}selected{% endif %}>Nom</option>
+        <option value="distance" {% if request.GET.sort == "distance" %}selected{% endif %}>Distance parcourue</option>
+        <option value="sorties" {% if request.GET.sort == "sorties" %}selected{% endif %}>Nombre de sorties</option>
     </select>
 
     <div class="ms-2">
@@ -28,27 +35,54 @@
     <input type="text" id="searchInput" placeholder="Rechercher un bateau..." class="form-control form-control-sm w-auto ms-3" style="min-width: 200px;">
 </form>
 
-<table class="table table-striped" id="bateauxTable">
-    <thead>
-        <tr>
+
+<table class="table table-striped table-hover shadow-lg" id="bateauxTable">
+    <thead class="table-dark">
+        <tr class="text-center">
             <th>Bateau</th>
             <th>Nombre de sorties</th>
             <th>Distance totale parcourue (km)</th>
         </tr>
     </thead>
-    <tbody>
-        {% for bateau in stats %}
-            <tr>
-                <td>{{ bateau.nom }}</td>
-                <td>{{ bateau.nombre_sorties }}</td>
-                <td>{{ bateau.total_distance|floatformat:2 }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="3" class="text-center">Aucune donnée disponible pour cette période.</td>
-            </tr>
-        {% endfor %}
-    </tbody>
+    <tbody class="text-center">
+    {% for bateau in stats %}
+        <tr class="bateau-row" data-detail="detail-{{ forloop.counter0 }}" style="cursor:pointer;">
+            <td>{{ bateau.nom }}</td>
+            <td>{{ bateau.nombre_sorties }}</td>
+            <td>{{ bateau.total_distance|floatformat:2 }}</td>
+        </tr>
+        <tr id="detail-{{ forloop.counter0 }}" class="bateau-detail-row" style="display:none; background:#f8f9fa;">
+            <td colspan="3">
+                <div>
+                    <strong>Marque :</strong> {{ bateau.marque|default:"-" }}<br>
+                    <strong>Année :</strong> {{ bateau.annee|default:"-" }}<br>
+                    <strong>Portance :</strong> {{ bateau.portance|default:"-" }} kg<br>
+                    {% if bateau.nombre_rameurs|default:0 > 1 %}
+                        {% if bateau.couple %}
+                            <strong>Armement :</strong> Couple<br>
+                            <button class="btn btn-outline-info btn-sm mt-2 btn-armer-mode"
+                                data-bateau-id="{{ bateau.id }}"
+                                data-mode="pointe">
+                                Armer en pointe
+                            </button>
+                        {% else %}
+                            <strong>Armement :</strong> Pointe<br>
+                            <button class="btn btn-outline-info btn-sm mt-2 btn-armer-mode"
+                                data-bateau-id="{{ bateau.id }}"
+                                data-mode="couple">
+                                Armer en couple
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    {% empty %}
+        <tr>
+            <td colspan="3" class="text-center">Aucune donnée disponible pour cette période.</td>
+        </tr>
+    {% endfor %}
+</tbody>
 </table>
 
 {% if stats.has_other_pages %}

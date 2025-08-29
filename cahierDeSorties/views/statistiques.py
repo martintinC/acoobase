@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from datetime import date
 import calendar
 from django.core.paginator import Paginator
@@ -70,8 +70,11 @@ def statistiques_rameurs(request):
     
 PER_PAGE_CHOICES = [5, 10, 20, 50, 100]
 
+
+
 def statistiques_bateaux(request):
     selected_year = request.GET.get('year', 'current')
+    sort = request.GET.get('sort', 'nom')
     today = date.today()
     current_year = today.year if today.month >= 9 else today.year - 1
     years = list(range(current_year, current_year - 5, -1))
@@ -92,25 +95,42 @@ def statistiques_bateaux(request):
             start_date = date(current_year, 9, 1)
             end_date = date(current_year + 1, 8, 31)
 
-    sorties = Sortie.objects.all()
+    sorties_filter = {}
     if start_date and end_date:
-        sorties = sorties.filter(debut__date__range=(start_date, end_date))
+        sorties_filter = {'sortie__debut__date__range': (start_date, end_date)}
 
-    # Construction de stats_list
-    stats_dict = {}
-    for sortie in sorties.select_related('bateau'):
-        bateau = sortie.bateau
-        if bateau not in stats_dict:
-            stats_dict[bateau] = {'nom': bateau.nom, 'nombre_sorties': 0, 'total_distance': 0.0}
-        stats_dict[bateau]['nombre_sorties'] += 1
-        stats_dict[bateau]['total_distance'] += float(sortie.distance or 0)
-    stats_list = list(stats_dict.values())
-    stats_list.sort(key=lambda b: b['nom'])
+    # Annoter tous les bateaux, même sans sortie
+    bateaux = Bateau.objects.annotate(
+        nombre_sorties=Count('sortie', filter=Q(**sorties_filter), distinct=True),
+        total_distance=Sum('sortie__distance', filter=Q(**sorties_filter))
+    )
 
-    # Pagination
-    per_page = request.GET.get('per_page', 10)
+    # Tri dynamique
+    if sort == "distance":
+        bateaux = bateaux.order_by('-total_distance', 'nom')
+    elif sort == "sorties":
+        bateaux = bateaux.order_by('-nombre_sorties', 'nom')
+    else:
+        bateaux = bateaux.order_by('nom')
+
+    stats_list = []
+    for bateau in bateaux:
+        stats_list.append({
+            'id': bateau.id,
+            'nom': bateau.nom,
+            'nombre_sorties': bateau.nombre_sorties,
+            'total_distance': round(bateau.total_distance or 0, 2),
+            'marque': bateau.marque,
+            'annee': bateau.annee,
+            'portance': bateau.portance,
+            'materiau': bateau.materiau,
+            'nombre_rameurs': bateau.nombre_rameurs,
+            'couple': bateau.couple,
+        })
+
+    per_page = request.GET.get('per_page', 5)
     if per_page == 'all':
-        per_page = 1000  # ou un nombre supérieur au nombre total de bateaux
+        per_page = 1000
     else:
         per_page = int(per_page)
 
@@ -124,3 +144,19 @@ def statistiques_bateaux(request):
         'selected_year': selected_year,
         'per_page_choices': PER_PAGE_CHOICES,
     })
+    
+    
+    
+def armer_mode(request, bateau_id, mode):
+    try:
+        bateau = Bateau.objects.get(id=bateau_id)
+        if mode == "couple":
+            bateau.couple = True
+        elif mode == "pointe":
+            bateau.couple = False
+        else:
+            return JsonResponse({"success": False, "error": "Mode inconnu"})
+        bateau.save(update_fields=["couple"])
+        return JsonResponse({"success": True})
+    except Bateau.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Bateau introuvable"})

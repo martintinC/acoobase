@@ -14,6 +14,7 @@ from .views import (
     creer_incident,
     cloturer_incident,
     editer_incident,
+    armer_mode,
 )
 
 urlpatterns = [
@@ -26,7 +27,8 @@ urlpatterns = [
     path('rameurs/get-rameurs/<int:bateau_id>/', get_rameurs, name='get_rameurs'),
     path('rameurs/statistiques-rameurs/', statistiques_rameurs, name='statistiques_rameurs'),
     path('rameurs/leaderboard/', leaderboard, name='leaderboard'),
-    path('bateaux/statistiques-bateaux/', statistiques_bateaux, name='statistiques_bateaux'),
+    path('bateaux/', statistiques_bateaux, name='statistiques_bateaux'),
+    path('bateaux/armer_mode/<int:bateau_id>/<str:mode>/', armer_mode, name='armer_mode'),
     path('atelier/', atelier, name='atelier'),
     path('atelier/creer-incident/', creer_incident, name='creer_incident'),
     path('atelier/cloturer-incident/<int:incident_id>/', cloturer_incident, name='cloturer_incident'),

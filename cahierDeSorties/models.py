@@ -28,6 +28,10 @@ class Bateau(models.Model):
     en_reparation = models.BooleanField(default=False)
     prive = models.BooleanField(default=False)
     immobile = models.BooleanField(default=False)
+    marque = models.CharField(max_length=100, blank=True, null=True)
+    annee = models.PositiveIntegerField(blank=True, null=True)
+    portance = models.PositiveIntegerField(blank=True, null=True)
+    materiau = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "Bateaux"  # Pluriel correct dans l'admin

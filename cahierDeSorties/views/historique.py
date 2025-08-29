@@ -9,7 +9,7 @@ def historique_sorties(request):
     date_debut = request.GET.get('date_debut')
     if date_debut:
         sorties_list = sorties_list.filter(debut__date=date_debut)
-    per_page = request.GET.get('per_page')
+    per_page = request.GET.get('per_page', 5)
     try:
         per_page = int(per_page)
         if per_page not in PER_PAGE_CHOICES:
