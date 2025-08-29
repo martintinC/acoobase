@@ -14,6 +14,7 @@
         {% for year in years %}
             <option value="{{ year }}" {% if selected_year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ year }} - {{ year|add:"1" }}</option>
         {% endfor %}
+        <option value="all" {% if request.GET.per_page == "all" %}selected{% endif %}>Tous</option>
     </select>
 
     <div class="ms-2">

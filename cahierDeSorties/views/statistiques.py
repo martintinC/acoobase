@@ -108,13 +108,11 @@ def statistiques_bateaux(request):
     stats_list.sort(key=lambda b: b['nom'])
 
     # Pagination
-    per_page = request.GET.get('per_page')
-    try:
+    per_page = request.GET.get('per_page', 10)
+    if per_page == 'all':
+        per_page = 1000  # ou un nombre supérieur au nombre total de bateaux
+    else:
         per_page = int(per_page)
-        if per_page not in PER_PAGE_CHOICES:
-            per_page = 10
-    except (TypeError, ValueError):
-        per_page = 10
 
     paginator = Paginator(stats_list, per_page)
     page_number = request.GET.get('page')
