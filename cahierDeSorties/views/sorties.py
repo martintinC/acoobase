@@ -9,7 +9,8 @@ def sorties_en_cours(request):
     today = datetime.now().date()
     sorties = Sortie.objects.filter(fin__isnull=True)
     bateaux_en_sortie = sorties.values_list("bateau_id", flat=True)
-    bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie)
+    # Ajoute le filtre immobile=False ici
+    bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False)
     form = SortieForm()
     form.fields["bateau"].queryset = bateaux_disponibles
     return render(request, "cahierDeSorties/sorties_en_cours.html", {
@@ -18,31 +19,58 @@ def sorties_en_cours(request):
         "form": form
     })
 
+
+
 def ajouter_sortie(request):
     if request.method == "POST":
         bateau_id = request.POST.get("bateau")
-        rameurs_ids = request.POST.getlist("rameurs[]")
+        rameurs_ids = request.POST.getlist("rameurs[]")  # Liste des rameurs sélectionnés
+
         try:
-            bateau = Bateau.objects.get(id=bateau_id)
+            bateau = Bateau.objects.get(id=bateau_id)  # Vérification du bateau
         except Bateau.DoesNotExist:
             return JsonResponse({"error": "Bateau non trouvé"}, status=404)
-        sortie = Sortie.objects.create(bateau=bateau, debut=now(), distance=None)
+
+        # Vérification que le bateau n'est pas immobilisé
+        if bateau.immobile:
+            return JsonResponse({"error": "Ce bateau est immobilisé."}, status=400)
+
+        sortie = Sortie.objects.create(bateau=bateau, debut=now(), distance=None)  # Création de la sortie
+        
+        bateau.en_sortie = True
+        bateau.save()
+
+        # Associer les rameurs à la sortie via la table intermédiaire Sortie_rameur
         for rameur_id in rameurs_ids:
             try:
                 rameur = Rameur.objects.get(id=rameur_id)
-                SortieRameur.objects.create(sortie=sortie, rameur=rameur)
+                SortieRameur.objects.create(sortie=sortie, rameur=rameur)  # Ajout du rameur à la sortie
             except Rameur.DoesNotExist:
                 return JsonResponse({"error": f"Rameur avec ID {rameur_id} non trouvé"}, status=404)
+
         return JsonResponse({"success": True})
+
+    # GET : filtrer les bateaux non immobilisés et non en sortie
+    sorties = Sortie.objects.filter(fin__isnull=True)
+    bateaux_en_sortie = sorties.values_list("bateau_id", flat=True)
+    bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False)
     form = SortieForm()
+    form.fields["bateau"].queryset = bateaux_disponibles
     return render(request, "cahierDeSorties/sorties_en_cours.html", {"form": form})
+
+
 
 def supprimer_sortie(request, sortie_id):
     if request.method == "POST":
         sortie = get_object_or_404(Sortie, id=sortie_id)
+        bateau = sortie.bateau
         sortie.delete()
+        bateau.en_sortie = False
+        bateau.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
+
+
 
 def valider_sortie(request, sortie_id):
     sortie = get_object_or_404(Sortie, id=sortie_id)
@@ -59,6 +87,8 @@ def valider_sortie(request, sortie_id):
             if fin:
                 sortie.fin = fin
             sortie.save()
+            sortie.bateau.en_sortie = False
+            sortie.bateau.save()
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)})

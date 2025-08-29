@@ -10,6 +10,9 @@ from .views import (
     statistiques_bateaux,
     leaderboard,
     atelier,
+    creer_incident,
+    cloturer_incident,
+    editer_incident,
 )
 
 urlpatterns = [
@@ -23,4 +26,7 @@ urlpatterns = [
     path('statistiques_bateaux/', statistiques_bateaux, name='statistiques_bateaux'),
     path('leaderboard/', leaderboard, name='leaderboard'),
     path("atelier/", atelier, name="atelier"),
+    path("atelier/creer/", creer_incident, name="creer_incident"),
+     path("atelier/cloturer/<int:incident_id>/", cloturer_incident, name="cloturer_incident"),
+     path("atelier/editer/<int:incident_id>/", editer_incident, name="editer_incident"),
 ]
