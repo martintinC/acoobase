@@ -1,5 +1,5 @@
 from django import forms
-from .models import Sortie
+from .models import Sortie, Incident
 
 class SortieForm(forms.ModelForm):
     class Meta:
@@ -8,3 +8,14 @@ class SortieForm(forms.ModelForm):
         widgets = {
             "bateau": forms.Select(attrs={"class": "form-control", "id": "selectBateau"}),  # Sélecteur de bateau
         }
+
+        
+class IncidentForm(forms.ModelForm):
+    bateau_immobilise = forms.BooleanField(
+        required=False,
+        label="Immobiliser le bateau"
+    )
+
+    class Meta:
+        model = Incident
+        exclude = ['commentaire', 'date_cloture']

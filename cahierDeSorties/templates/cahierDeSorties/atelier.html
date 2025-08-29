@@ -4,62 +4,190 @@
 
 {% block content %}
     <h1 class="text-center mb-4">🔧 Atelier - Suivi des Incidents</h1>
+    <a href="{% url 'creer_incident' %}" class="btn btn-primary mb-3">Créer un incident</a>
 
-    <!-- Incidents en cours -->
-    <h2 class="mt-4">🚨 Incidents en cours</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Bateau</th>
-                <th>Description</th>
-                <th>Date Signalement</th>
-                <th>Créateur</th>
-                <th>Immobilisé</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for incident in incidents_en_cours %}
-                <tr>
-                    <td>{{ incident.bateau.nom }}</td>
-                    <td>{{ incident.description }}</td>
-                    <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
-                    <td>{{ incident.createur.prenom }} {{ incident.createur.nom }}</td>
-                    <td>{% if incident.bateau_immobilise %}❌ Oui{% else %}✅ Non{% endif %}</td>
-                </tr>
-            {% empty %}
-                <tr>
-                    <td colspan="5" class="text-center">Aucun incident en cours.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Onglets Bootstrap -->
+    <ul class="nav nav-tabs mb-3" id="atelierTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="en-cours-tab" data-bs-toggle="tab" data-bs-target="#en-cours" type="button" role="tab" aria-controls="en-cours" aria-selected="true">
+          🚨 Incidents en cours
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="clotures-tab" data-bs-toggle="tab" data-bs-target="#clotures" type="button" role="tab" aria-controls="clotures" aria-selected="false">
+          ✅ Incidents clôturés
+        </button>
+      </li>
+    </ul>
 
-    <!-- Incidents clôturés -->
-    <h2 class="mt-4">✅ Incidents clôturés</h2>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Bateau</th>
-                <th>Description</th>
-                <th>Date Signalement</th>
-                <th>Date Clôture</th>
-                <th>Commentaire</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for incident in incidents_clotures %}
+    <div class="tab-content" id="atelierTabsContent">
+      <!-- Volet incidents en cours -->
+      <div class="tab-pane fade show active" id="en-cours" role="tabpanel" aria-labelledby="en-cours-tab">
+        <table class="table table-striped align-middle">
+            <thead>
                 <tr>
-                    <td>{{ incident.bateau.nom }}</td>
-                    <td>{{ incident.description }}</td>
-                    <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
-                    <td>{{ incident.date_cloture|date:"d/m/Y H:i" }}</td>
-                    <td>{{ incident.commentaire|default:"-" }}</td>
+                    <th>Bateau</th>
+                    <th>Date Signalement</th>
+                    <th>Immobilisé</th>
                 </tr>
-            {% empty %}
+            </thead>
+            <tbody>
+                {% for incident in incidents_en_cours %}
+                    <tr data-bs-toggle="collapse" data-bs-target="#details-incident-{{ incident.id }}" aria-expanded="false" aria-controls="details-incident-{{ incident.id }}" style="cursor:pointer;">
+                        <td>{{ incident.bateau.nom }}</td>
+                        <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td>
+                            {% if incident.bateau.immobile %}
+                                <span class="badge bg-danger">Oui</span>
+                            {% else %}
+                                <span class="badge bg-success">Non</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="collapse bg-light" id="details-incident-{{ incident.id }}">
+                        <td colspan="3">
+                            <div class="card border-primary mb-2 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                        Détail de l'incident
+                                    </h5>
+                                    <ul class="list-unstyled mb-2">
+                                        <li>
+                                            <strong><i class="bi bi-person-circle"></i> Créateur :</strong>
+                                            {{ incident.createur.prenom }} {{ incident.createur.nom }}
+                                        </li>
+                                        <li>
+                                            <strong><i class="bi bi-calendar-event"></i> Signalé le :</strong>
+                                            {{ incident.date_creation|date:"d/m/Y H:i" }}
+                                        </li>
+                                        <li>
+                                            <strong><i class="bi bi-info-circle"></i> Description :</strong>
+                                            <span class="text-dark">{{ incident.description|linebreaksbr }}</span>
+                                        </li>
+                                        {% if incident.commentaire %}
+                                        <li>
+                                            <strong><i class="bi bi-chat-left-text"></i> Commentaire :</strong>
+                                            <span class="text-muted">{{ incident.commentaire|linebreaksbr }}</span>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                    {% if not incident.date_cloture %}
+                                    <form method="post" action="{% url 'cloturer_incident' incident.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-success btn-sm mt-2"
+                                            onclick="return confirm('Voulez-vous vraiment clôturer cet incident ?');">
+                                            <i class="bi bi-check-circle"></i> Clôturer l'incident
+                                        </button>
+                                    </form>
+                                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="modal" data-bs-target="#editIncidentModal{{ incident.id }}">
+                                        <i class="bi bi-pencil"></i> Éditer
+                                    </button>
+                                    <!-- Modal édition -->
+                                    <div class="modal fade" id="editIncidentModal{{ incident.id }}" tabindex="-1" aria-labelledby="editIncidentModalLabel{{ incident.id }}" aria-hidden="true">
+                                      <div class="modal-dialog">
+                                        <div class="modal-content">
+                                          <form method="post" action="{% url 'editer_incident' incident.id %}">
+                                            {% csrf_token %}
+                                            <div class="modal-header">
+                                              <h5 class="modal-title" id="editIncidentModalLabel{{ incident.id }}">Éditer l'incident</h5>
+                                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                              <div class="mb-3">
+                                                <label for="commentaire{{ incident.id }}" class="form-label">Commentaire</label>
+                                                <textarea class="form-control" id="commentaire{{ incident.id }}" name="commentaire" rows="3">{{ incident.commentaire }}</textarea>
+                                              </div>
+                                              <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" value="1" id="immobile{{ incident.id }}" name="immobile" {% if incident.bateau.immobile %}checked{% endif %}>
+                                                <label class="form-check-label" for="immobile{{ incident.id }}">
+                                                  Immobiliser le bateau
+                                                </label>
+                                              </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                              <button type="submit" class="btn btn-primary">Enregistrer</button>
+                                            </div>
+                                          </form>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Clôturé le {{ incident.date_cloture|date:"d/m/Y H:i" }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">Aucun incident en cours.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+      <!-- Volet incidents clôturés -->
+      <div class="tab-pane fade" id="clotures" role="tabpanel" aria-labelledby="clotures-tab">
+        <table class="table table-striped align-middle">
+            <thead>
                 <tr>
-                    <td colspan="5" class="text-center">Aucun incident clôturé.</td>
+                    <th>Bateau</th>
+                    <th>Date Signalement</th>
+                    <th>Date Clôture</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for incident in incidents_clotures %}
+                    <tr data-bs-toggle="collapse" data-bs-target="#details-incident-cloture-{{ incident.id }}" aria-expanded="false" aria-controls="details-incident-cloture-{{ incident.id }}" style="cursor:pointer;">
+                        <td>{{ incident.bateau.nom }}</td>
+                        <td>{{ incident.date_creation|date:"d/m/Y H:i" }}</td>
+                        <td>{{ incident.date_cloture|date:"d/m/Y H:i" }}</td>
+                    </tr>
+                    <tr class="collapse bg-light" id="details-incident-cloture-{{ incident.id }}">
+                        <td colspan="3">
+                            <div class="card border-secondary mb-2 shadow-sm">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-2">
+                                        <i class="bi bi-info-circle text-secondary"></i>
+                                        Détail de l'incident clôturé
+                                    </h5>
+                                    <ul class="list-unstyled mb-2">
+                                        <li>
+                                            <strong><i class="bi bi-person-circle"></i> Créateur :</strong>
+                                            {{ incident.createur.prenom }} {{ incident.createur.nom }}
+                                        </li>
+                                        <li>
+                                            <strong><i class="bi bi-calendar-event"></i> Signalé le :</strong>
+                                            {{ incident.date_creation|date:"d/m/Y H:i" }}
+                                        </li>
+                                        <li>
+                                            <strong><i class="bi bi-calendar-check"></i> Clôturé le :</strong>
+                                            {{ incident.date_cloture|date:"d/m/Y H:i" }}
+                                        </li>
+                                        <li>
+                                            <strong><i class="bi bi-info-circle"></i> Description :</strong>
+                                            <span class="text-dark">{{ incident.description|linebreaksbr }}</span>
+                                        </li>
+                                        {% if incident.commentaire %}
+                                        <li>
+                                            <strong><i class="bi bi-chat-left-text"></i> Commentaire :</strong>
+                                            <span class="text-muted">{{ incident.commentaire|linebreaksbr }}</span>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">Aucun incident clôturé.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+    </div>
 {% endblock %}

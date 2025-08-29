@@ -27,6 +27,7 @@ class Bateau(models.Model):
     en_sortie = models.BooleanField(default=False)
     en_reparation = models.BooleanField(default=False)
     prive = models.BooleanField(default=False)
+    immobile = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = "Bateaux"  # Pluriel correct dans l'admin
@@ -63,7 +64,6 @@ class Incident(models.Model):
     bateau = models.ForeignKey(Bateau, on_delete=models.CASCADE)
     date_creation = models.DateTimeField(auto_now_add=True)
     date_cloture = models.DateTimeField(null=True, blank=True)
-    bateau_immobilise = models.BooleanField(default=False)
     createur = models.ForeignKey(Rameur, on_delete=models.CASCADE)
     description = models.TextField()
     commentaire = models.TextField(blank=True, null=True)
