@@ -28,6 +28,6 @@ python manage.py runserver
 Open the app in your web browser
 
 ```
-http://127.0.0.1:8000/cahierDeSorties/sorties/
+http://127.0.0.1:8000/sorties/sorties-en-cours
 http://127.0.0.1:8000/admin/
 ```

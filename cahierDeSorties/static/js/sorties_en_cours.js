@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
             let finSortieFormatted = `${heures}:${minutes}`;  // Format "HH:mm"
 
             // Envoi des données au serveur pour enregistrer la sortie avec le nombre de km et l'heure de fin
-            fetch(`/cahierDeSorties/valider_sortie/${sortieId}/`, {
+            fetch(`/sorties/valider-sortie/${sortieId}/`, {
                 method: "POST",
                 headers: {
                     "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
