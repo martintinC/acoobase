@@ -22,7 +22,7 @@ def get_rameurs(request, bateau_id):
     except Bateau.DoesNotExist:
         return JsonResponse({"error": "Bateau non trouvé"}, status=404)
     rameurs_en_sortie = SortieRameur.objects.filter(sortie__fin__isnull=True).values_list("rameur_id", flat=True)
-    rameurs_disponibles = Rameur.objects.exclude(id__in=rameurs_en_sortie)
+    rameurs_disponibles = Rameur.objects.exclude(id__in=rameurs_en_sortie).order_by('prenom', 'nom')
     return JsonResponse({
         "nombre_rameurs": bateau.nombre_rameurs,
         "rameurs": list(rameurs_disponibles.values("id", "prenom", "nom"))

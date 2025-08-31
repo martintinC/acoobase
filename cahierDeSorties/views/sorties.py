@@ -9,7 +9,7 @@ def sorties_en_cours(request):
     today = datetime.now().date()
     sorties = Sortie.objects.filter(fin__isnull=True)
     bateaux_en_sortie = sorties.values_list("bateau_id", flat=True)
-    bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False)
+    bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False).order_by('nom')
     form = SortieForm()
     form.fields["bateau"].queryset = bateaux_disponibles
     return render(request, "cahierDeSorties/sorties_en_cours.html", {
