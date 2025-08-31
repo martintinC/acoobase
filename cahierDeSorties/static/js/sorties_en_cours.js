@@ -177,5 +177,68 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
+document.addEventListener("DOMContentLoaded", function() {
+    const bateauSelect = document.getElementById("id_bateau");
+    const rameursContainer = document.getElementById("rameursContainer");
+    const barreurField = document.getElementById("barreur-field");
+
+    function updateFields() {
+        const selectedOption = bateauSelect.options[bateauSelect.selectedIndex];
+        const hasBateau = bateauSelect.value !== "";
+        // Affiche les rameurs si un bateau est choisi
+        if (hasBateau && selectedOption.dataset.nbrameurs) {
+            rameursContainer.style.display = "";
+            const nombreRameurs = parseInt(selectedOption.dataset.nbrameurs, 10) || 0;
+            rameursContainer.innerHTML = "";
+            for (let i = 0; i < nombreRameurs; i++) {
+                const select = document.createElement("select");
+                select.name = "rameurs[]";
+                select.className = "form-control mb-2";
+                select.innerHTML = '<option value="">--- Choisir un rameur ---</option>';
+                rameursChoices.forEach(function(opt) {
+                    const option = document.createElement("option");
+                    option.value = opt[0];
+                    option.textContent = opt[1];
+                    select.appendChild(option);
+                });
+                rameursContainer.appendChild(select);
+            }
+        } else {
+            rameursContainer.style.display = "none";
+            rameursContainer.innerHTML = "";
+        }
+        // Affiche le barreur si le bateau est barré
+        if (hasBateau && selectedOption.dataset.barre === "true") {
+            barreurField.style.display = "";
+        } else {
+            barreurField.style.display = "none";
+            const barreurInput = document.getElementById("id_barreur");
+            if (barreurInput) barreurInput.value = "";
+        }
+    }
+
+    if (bateauSelect) {
+        bateauSelect.addEventListener("change", updateFields);
+        updateFields();
+    }
+});
 
 
+document.addEventListener("DOMContentLoaded", function() {
+    const bateauSelect = document.getElementById("selectBateau");
+    const barreurField = document.getElementById("barreur-field");
+
+    if (bateauSelect && barreurField) {
+        bateauSelect.addEventListener("change", function() {
+            const selectedOption = bateauSelect.options[bateauSelect.selectedIndex];
+            // On suppose que chaque <option> a data-barre="true" ou "false"
+            if (selectedOption && selectedOption.dataset.barre === "true") {
+                barreurField.style.display = "";
+            } else {
+                barreurField.style.display = "none";
+                const barreurInput = document.getElementById("id_barreur");
+                if (barreurInput) barreurInput.value = "";
+            }
+        });
+    }
+});

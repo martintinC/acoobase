@@ -45,6 +45,7 @@ class Sortie(models.Model):
     debut = models.DateTimeField()
     fin = models.DateTimeField(null=True, blank=True)
     couple = models.BooleanField(default=False)
+    barreur = models.ForeignKey(Rameur, null=True, blank=True, on_delete=models.SET_NULL, related_name='sorties_barrees')
 
     def save(self, *args, **kwargs):
         # Si la sortie est en cours de création et que le bateau est défini,

@@ -1,15 +1,21 @@
 from django import forms
-from .models import Sortie, Incident
+from .models import Sortie, Incident, Rameur
 
 class SortieForm(forms.ModelForm):
+    barreur = forms.ModelChoiceField(
+        queryset=Rameur.objects.filter(actif=True),
+        required=False,
+        label="Barreur",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+
     class Meta:
         model = Sortie
-        fields = ["bateau"]  # Seul le bateau est sélectionnable au départ
+        fields = ["bateau", "barreur"]
         widgets = {
-            "bateau": forms.Select(attrs={"class": "form-control", "id": "selectBateau"}),  # Sélecteur de bateau
+            "bateau": forms.Select(attrs={"class": "form-control", "id": "selectBateau"}),
         }
 
-        
 class IncidentForm(forms.ModelForm):
     bateau_immobilise = forms.BooleanField(
         required=False,

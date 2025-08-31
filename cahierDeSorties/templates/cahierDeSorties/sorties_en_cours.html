@@ -77,15 +77,24 @@
                 <div class="modal-body">
                     <form id="ajoutSortieForm">
                         {% csrf_token %}
-                        
-                        <!-- Sélection du bateau -->
                         <div class="mb-3">
                             <label for="selectBateau" class="form-label">Choisir un bateau :</label>
-                            {{ form.bateau }}
+                            <select name="bateau" id="selectBateau" class="form-control">
+                                <option value="">--- Choisir un bateau ---</option>
+                                {% for bateau in form.fields.bateau.queryset %}
+                                    <option value="{{ bateau.id }}" data-barre="{{ bateau.barre|yesno:'true,false' }}">{{ bateau.nom }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
 
                         <!-- Zone où les champs rameurs seront ajoutés dynamiquement -->
                         <div id="rameursContainer"></div>
+
+                        <!-- Champ barreur caché par défaut -->
+                        <div id="barreur-field" style="display:none;">
+                            <label for="id_barreur" class="form-label">Barreur :</label>
+                            {{ form.barreur }}
+                        </div>
 
                         <div class="text-center mt-3">
                             <button type="submit" class="btn btn-primary">Enregistrer</button>

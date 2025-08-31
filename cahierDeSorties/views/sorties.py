@@ -9,7 +9,6 @@ def sorties_en_cours(request):
     today = datetime.now().date()
     sorties = Sortie.objects.filter(fin__isnull=True)
     bateaux_en_sortie = sorties.values_list("bateau_id", flat=True)
-    # Ajoute le filtre immobile=False ici
     bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False)
     form = SortieForm()
     form.fields["bateau"].queryset = bateaux_disponibles
@@ -19,32 +18,38 @@ def sorties_en_cours(request):
         "form": form
     })
 
-
-
 def ajouter_sortie(request):
     if request.method == "POST":
         bateau_id = request.POST.get("bateau")
-        rameurs_ids = request.POST.getlist("rameurs[]")  # Liste des rameurs sélectionnés
+        rameurs_ids = request.POST.getlist("rameurs[]")
+        barreur_id = request.POST.get("barreur")
 
         try:
-            bateau = Bateau.objects.get(id=bateau_id)  # Vérification du bateau
+            bateau = Bateau.objects.get(id=bateau_id)
         except Bateau.DoesNotExist:
             return JsonResponse({"error": "Bateau non trouvé"}, status=404)
 
-        # Vérification que le bateau n'est pas immobilisé
-        if bateau.immobile:
-            return JsonResponse({"error": "Ce bateau est immobilisé."}, status=400)
+        barreur = None
+        if barreur_id:
+            try:
+                barreur = Rameur.objects.get(id=barreur_id)
+            except Rameur.DoesNotExist:
+                return JsonResponse({"error": "Barreur non trouvé"}, status=404)
 
-        sortie = Sortie.objects.create(bateau=bateau, debut=now(), distance=None)  # Création de la sortie
-        
-        bateau.en_sortie = True
-        bateau.save()
+        sortie = Sortie.objects.create(
+            bateau=bateau,
+            debut=now(),
+            distance=None,
+            barreur=barreur if (bateau.barre and barreur) else None
+        )
 
-        # Associer les rameurs à la sortie via la table intermédiaire Sortie_rameur
+        # Associer les rameurs à la sortie via la table intermédiaire SortieRameur
         for rameur_id in rameurs_ids:
+            if barreur and int(rameur_id) == barreur.id:
+                continue  # Ne pas associer le barreur comme rameur
             try:
                 rameur = Rameur.objects.get(id=rameur_id)
-                SortieRameur.objects.create(sortie=sortie, rameur=rameur)  # Ajout du rameur à la sortie
+                SortieRameur.objects.create(sortie=sortie, rameur=rameur)
             except Rameur.DoesNotExist:
                 return JsonResponse({"error": f"Rameur avec ID {rameur_id} non trouvé"}, status=404)
 
@@ -58,8 +63,6 @@ def ajouter_sortie(request):
     form.fields["bateau"].queryset = bateaux_disponibles
     return render(request, "cahierDeSorties/sorties_en_cours.html", {"form": form})
 
-
-
 def supprimer_sortie(request, sortie_id):
     if request.method == "POST":
         sortie = get_object_or_404(Sortie, id=sortie_id)
@@ -69,8 +72,6 @@ def supprimer_sortie(request, sortie_id):
         bateau.save()
         return JsonResponse({"success": True})
     return JsonResponse({"success": False}, status=400)
-
-
 
 def valider_sortie(request, sortie_id):
     sortie = get_object_or_404(Sortie, id=sortie_id)
