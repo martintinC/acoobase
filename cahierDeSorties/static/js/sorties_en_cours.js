@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             let select = document.createElement("select");
                             select.name = "rameurs[]";
                             select.classList.add("form-control");
+                            select.required = true;
 
                             let optionPlaceholder = document.createElement("option");
                             optionPlaceholder.textContent = "-- Choisir un rameur --";
@@ -234,8 +235,10 @@ document.addEventListener("DOMContentLoaded", function() {
             // On suppose que chaque <option> a data-barre="true" ou "false"
             if (selectedOption && selectedOption.dataset.barre === "true") {
                 barreurField.style.display = "";
+                document.getElementById("id_barreur").required = true;
             } else {
                 barreurField.style.display = "none";
+                document.getElementById("id_barreur").required = false;
                 const barreurInput = document.getElementById("id_barreur");
                 if (barreurInput) barreurInput.value = "";
             }

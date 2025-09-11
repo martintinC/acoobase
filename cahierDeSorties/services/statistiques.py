@@ -1,24 +1,28 @@
-from django.db.models import Sum, F, Q, Value, CharField, Case, When
+from django.db.models import Sum, F, Value, CharField, Case, When
 from datetime import date
+from ..models import SortieRameur
 
-def kilometres_par_type_bateau(rameur_id, saison_debut_annee):
-    # Saison sportive : 1er septembre N à 31 août N+1
-    date_debut = date(saison_debut_annee, 9, 1)
-    date_fin = date(saison_debut_annee + 1, 8, 31)
-
-    from ..models import SortieRameur
-
-    sorties = SortieRameur.objects.filter(
-        rameur_id=rameur_id,
-        sortie__debut__date__gte=date_debut,
-        sortie__debut__date__lte=date_fin,
-        sortie__distance__isnull=False,
-    ).select_related('sortie__bateau')
+def kilometres_par_type_bateau(rameur_id, saison_debut_annee=None):
+    # Si saison_debut_annee est None, on prend toutes les saisons
+    if saison_debut_annee is not None:
+        date_debut = date(saison_debut_annee, 9, 1)
+        date_fin = date(saison_debut_annee + 1, 8, 31)
+        sorties = SortieRameur.objects.filter(
+            rameur_id=rameur_id,
+            sortie__debut__date__gte=date_debut,
+            sortie__debut__date__lte=date_fin,
+            sortie__distance__isnull=False,
+        ).select_related('sortie__bateau')
+    else:
+        sorties = SortieRameur.objects.filter(
+            rameur_id=rameur_id,
+            sortie__distance__isnull=False,
+        ).select_related('sortie__bateau')
 
     # Annoter avec les caractéristiques nécessaires
     sorties = sorties.annotate(
         nombre_rameurs=F('sortie__bateau__nombre_rameurs'),
-        couple=F('sortie__couple'),  # ✅ Utilisation de sortie.couple ici
+        couple=F('sortie__couple'),
         barre=F('sortie__bateau__barre'),
     ).annotate(
         type_bateau=Case(

@@ -6,6 +6,13 @@ from django.core.paginator import Paginator
 from ..models import Rameur, Bateau, Sortie, SortieRameur
 from ..services.statistiques import kilometres_par_type_bateau
 
+from datetime import date
+import calendar
+from django.shortcuts import render
+from django.db.models import Sum, Count
+from cahierDeSorties.models import Rameur, Sortie, SortieRameur, Bateau
+from cahierDeSorties.services.statistiques import kilometres_par_type_bateau
+
 def statistiques_rameurs(request):
     rameurs = Rameur.objects.all()
     selected_rameur_id = request.GET.get('rameur_id')
@@ -14,28 +21,36 @@ def statistiques_rameurs(request):
     current_year = today.year if today.month >= 9 else today.year - 1
     years = list(range(current_year, current_year - 5, -1))
     start_date, end_date = None, None
+    year_for_stats = None  # Défini par défaut
+
     if selected_year == 'current':
         start_date = date(current_year, 9, 1)
         end_date = date(current_year + 1, 8, 31)
+        year_for_stats = current_year
     elif selected_year == 'total':
         start_date, end_date = None, None
+        year_for_stats = None
     else:
         try:
-            selected_year = int(selected_year)
-            start_date = date(selected_year, 9, 1)
-            end_date = date(selected_year + 1, 8, 31)
+            selected_year_int = int(selected_year)
+            start_date = date(selected_year_int, 9, 1)
+            end_date = date(selected_year_int + 1, 8, 31)
+            year_for_stats = selected_year_int
         except ValueError:
             selected_year = 'current'
             start_date = date(current_year, 9, 1)
             end_date = date(current_year + 1, 8, 31)
+            year_for_stats = current_year
+
     sorties = Sortie.objects.all()
     if start_date and end_date:
         sorties = sorties.filter(debut__date__range=(start_date, end_date))
     sorties_rameur = SortieRameur.objects.filter(sortie__in=sorties)
     distance_par_mois = {month: 0 for month in range(1, 13)}
+
     if selected_rameur_id:
         selected_rameur = Rameur.objects.get(id=selected_rameur_id)
-        km_par_type_bateau = kilometres_par_type_bateau(selected_rameur_id, int(selected_year) if selected_year != 'current' else current_year)
+        km_par_type_bateau = kilometres_par_type_bateau(selected_rameur_id, year_for_stats)
         sorties_rameur = sorties_rameur.filter(rameur=selected_rameur)
         nombre_sorties = sorties_rameur.count()
         total_kilometres = sorties_rameur.aggregate(total=Sum('sortie__distance'))['total'] or 0
