@@ -9,10 +9,10 @@
     <!-- Formulaire de sélection -->
     <form method="GET" class="d-flex justify-content-center align-items-center gap-2 mb-4">
         <select name="rameur_id" class="form-select w-auto">
-            <option value="">Sélectionner un rameur</option>
+            <option value="">--- Choisir un rameur ---</option>
             {% for rameur in rameurs %}
                 <option value="{{ rameur.id }}" {% if rameur.id|stringformat:"s" == selected_rameur_id %}selected{% endif %}>
-                    {{ rameur.nom }} {{ rameur.prenom }}
+                    {{ rameur.prenom }} {{ rameur.nom }}
                 </option>
             {% endfor %}
         </select>
