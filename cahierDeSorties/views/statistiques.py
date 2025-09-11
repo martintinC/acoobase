@@ -14,7 +14,7 @@ from cahierDeSorties.models import Rameur, Sortie, SortieRameur, Bateau
 from cahierDeSorties.services.statistiques import kilometres_par_type_bateau
 
 def statistiques_rameurs(request):
-    rameurs = Rameur.objects.all()
+    rameurs = Rameur.objects.all().order_by('prenom', 'nom')
     selected_rameur_id = request.GET.get('rameur_id')
     selected_year = request.GET.get('year', 'current')
     today = date.today()
