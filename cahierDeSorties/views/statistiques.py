@@ -55,7 +55,7 @@ def statistiques_rameurs(request):
         nombre_sorties = sorties_rameur.count()
         total_kilometres = sorties_rameur.aggregate(total=Sum('sortie__distance'))['total'] or 0
         moyenne_distances = total_kilometres / nombre_sorties if nombre_sorties else 0
-        bateau_prefere_data = sorties_rameur.values('sortie__bateau').annotate(nb_sorties=Count('id')).order_by('-nb_sorties').first()
+        bateau_prefere_data = sorties_rameur.values('sortie__bateau').annotate(total_km=Sum('sortie__distance')).order_by('-total_km').first()
         bateau_prefere = Bateau.objects.get(id=bateau_prefere_data['sortie__bateau']) if bateau_prefere_data else None
         sorties_par_mois = sorties_rameur.values_list('sortie__debut', 'sortie__distance')
         for sortie_date, distance in sorties_par_mois:

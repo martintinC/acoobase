@@ -1,5 +1,5 @@
 from django import forms
-from .models import Sortie, Incident, Rameur
+from .models import Bateau, Sortie, Incident, Rameur
 
 class SortieForm(forms.ModelForm):
     barreur = forms.ModelChoiceField(
@@ -16,10 +16,26 @@ class SortieForm(forms.ModelForm):
             "bateau": forms.Select(attrs={"class": "form-control", "id": "selectBateau"}),
         }
 
+
 class IncidentForm(forms.ModelForm):
+    createur = forms.ModelChoiceField(
+        queryset=Rameur.objects.filter(actif=True).order_by('prenom', 'nom'),
+        label="Créateur",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
+    bateau = forms.ModelChoiceField(
+        queryset=Bateau.objects.all().order_by('nom'),
+        required=False,
+        label="Bateau",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
     bateau_immobilise = forms.BooleanField(
         required=False,
         label="Immobiliser le bateau"
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        required=False
     )
 
     class Meta:
