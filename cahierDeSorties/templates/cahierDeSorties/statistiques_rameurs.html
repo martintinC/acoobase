@@ -7,8 +7,8 @@
     <h1 class="text-center mb-4">📊 Statistiques rameurs</h1>
 
     <!-- Formulaire de sélection -->
-    <form method="GET" class="d-flex justify-content-center align-items-center gap-2 mb-4">
-        <select name="rameur_id" class="form-select w-auto">
+    <form method="GET" class="d-flex flex-column flex-sm-row justify-content-center align-items-center gap-2 mb-4">
+        <select name="rameur_id" class="form-select w-100 w-sm-auto">
             <option value="">--- Choisir un rameur ---</option>
             {% for rameur in rameurs %}
                 <option value="{{ rameur.id }}" {% if rameur.id|stringformat:"s" == selected_rameur_id %}selected{% endif %}>
@@ -17,7 +17,7 @@
             {% endfor %}
         </select>
 
-        <select name="year" class="form-select w-auto">
+        <select name="year" class="form-select w-100 w-sm-auto">
             <option value="current" {% if selected_year == "current" %}selected{% endif %}>Année en cours</option>
             <option value="total" {% if selected_year == "total" %}selected{% endif %}>Total</option>
             {% for year in years %}
@@ -25,7 +25,7 @@
             {% endfor %}
         </select>
 
-        <button type="submit" class="btn btn-primary">Afficher</button>
+        <button type="submit" class="btn btn-primary w-100 w-sm-auto">Afficher</button>
     </form>
 
     {% if selected_rameur %}

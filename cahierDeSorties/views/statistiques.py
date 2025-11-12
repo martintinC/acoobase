@@ -83,7 +83,7 @@ def statistiques_rameurs(request):
     })
 
     
-PER_PAGE_CHOICES = [5, 10, 20, 50, 100]
+PER_PAGE_CHOICES = [10, 20, 50, 100]
 
 
 
@@ -143,18 +143,8 @@ def statistiques_bateaux(request):
             'couple': bateau.couple,
         })
 
-    per_page = request.GET.get('per_page', 5)
-    if per_page == 'all':
-        per_page = 1000
-    else:
-        per_page = int(per_page)
-
-    paginator = Paginator(stats_list, per_page)
-    page_number = request.GET.get('page')
-    stats_page = paginator.get_page(page_number)
-
     return render(request, 'cahierDeSorties/statistiques_bateaux.html', {
-        'stats': stats_page,
+        'stats': stats_list,
         'years': years,
         'selected_year': selected_year,
         'per_page_choices': PER_PAGE_CHOICES,
