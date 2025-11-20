@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.db.models import Sum, Count
 from cahierDeSorties.models import Rameur, Sortie, SortieRameur, Bateau
 from cahierDeSorties.services.statistiques import kilometres_par_type_bateau
+from django.http import JsonResponse
 
 def statistiques_rameurs(request):
     rameurs = Rameur.objects.all().order_by('prenom', 'nom')
