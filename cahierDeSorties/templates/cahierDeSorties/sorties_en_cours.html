@@ -43,6 +43,9 @@
                                 {% empty %}
                                     <li>Aucun rameur assigné.</li>
                                 {% endfor %}
+                                {% if sortie.barreur %}
+                                    <li>Barreur : {{ sortie.barreur.prenom }} {{ sortie.barreur.nom }}</li>
+                                {% endif %}
                             </ul>
                             <div class="mb-3 text-center">
                                 <label for="distance_{{ sortie.id }}" class="form-label">Distance (en km) :</label>

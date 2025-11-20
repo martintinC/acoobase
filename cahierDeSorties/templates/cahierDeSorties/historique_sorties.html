@@ -58,6 +58,9 @@
                                     {% empty %}
                                         <li><em>Aucun rameur assigné.</em></li>
                                     {% endfor %}
+                                    {% if sortie.barreur %}
+                                        <li>Barreur : {{ sortie.barreur.prenom }} {{ sortie.barreur.nom }}</li>
+                                    {% endif %}
                                 </ul>
                             </td>
                         </tr>
