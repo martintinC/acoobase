@@ -16,12 +16,16 @@
         </thead>
         <tbody>
             {% for rameur in rameurs_stats %}
-                <tr>
+                <tr class="leaderboard-row" data-rameur-id="{{ rameur.id }}" style="cursor: pointer;">
                     <td>{{ forloop.counter }}</td>
                     <td>{{ rameur.prenom }} {{ rameur.nom }}</td>
-                    <td>{{ rameur.total_distance|default:"0" }}</td>
+                    <td>{{ rameur.total_distance|default:"0"|floatformat:0 }}</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/leaderboard.js' %}" defer></script>
 {% endblock %}
