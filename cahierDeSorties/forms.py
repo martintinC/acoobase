@@ -3,7 +3,7 @@ from .models import Bateau, Sortie, Incident, Rameur
 
 class SortieForm(forms.ModelForm):
     barreur = forms.ModelChoiceField(
-        queryset=Rameur.objects.filter(actif=True),
+        queryset=Rameur.objects.filter(actif=True).order_by('prenom', 'nom'),
         required=False,
         label="Barreur",
         widget=forms.Select(attrs={"class": "form-control"})
