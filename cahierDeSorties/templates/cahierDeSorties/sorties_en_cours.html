@@ -4,7 +4,123 @@
 {% block title %}Sorties en cours{% endblock %}
 
 {% block content %}
+    <!-- Style pour l'animation d'anniversaire -->
+    {% if anniversaires %}
+    <style>
+        .birthday-toast {
+            position: fixed;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-150%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.6s ease;
+            opacity: 0;
+            min-width: 400px;
+            border: 3px solid #ffd700;
+        }
+        
+        .birthday-toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            animation: pulse 0.5s ease-in-out 2;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+            50% {
+                transform: translateX(-50%) translateY(0) scale(1.05);
+            }
+        }
+        
+        .birthday-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+        
+        .birthday-emoji {
+            font-size: 2.5rem;
+            animation: bounce 1s infinite;
+        }
+        
+        .birthday-emoji:last-child {
+            animation-delay: 0.2s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+        
+        .birthday-message {
+            text-align: center;
+            font-size: 1.2rem;
+        }
+        
+        .birthday-message strong {
+            display: block;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .birthday-names {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        @media (max-width: 576px) {
+            .birthday-toast {
+                min-width: 90%;
+                padding: 20px;
+            }
+            
+            .birthday-emoji {
+                font-size: 2rem;
+            }
+            
+            .birthday-message {
+                font-size: 1rem;
+            }
+            
+            .birthday-message strong {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    {% endif %}
+
     <h1 class="text-center mb-4">🚣‍♂️ Sorties en cours</h1>
+
+    <!-- Animation d'anniversaire -->
+    {% if anniversaires %}
+    <div id="birthday-toast" class="birthday-toast">
+        <div class="birthday-content">
+            <div class="birthday-emoji">🎂🎉🎈</div>
+            <div class="birthday-message">
+                <strong>Joyeux anniversaire !</strong>
+                <div class="birthday-names">
+                    {% for rameur in anniversaires %}
+                        <div>{{ rameur.prenom }} {{ rameur.nom }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="birthday-emoji">🎊🥳🎁</div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Bouton pour ouvrir le modal -->
     <div class="text-end mb-3">
@@ -121,4 +237,29 @@
 
     <!-- Script spécifique à la page des sorties en cours -->
     <script src="{% static 'js/sorties_en_cours.js' %}" defer></script>
+    
+    <!-- Script pour l'animation d'anniversaire -->
+    {% if anniversaires %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const birthdayToast = document.getElementById('birthday-toast');
+            if (birthdayToast) {
+                console.log('Birthday toast found!');
+                // Afficher l'animation après un petit délai
+                setTimeout(function() {
+                    console.log('Adding show class...');
+                    birthdayToast.classList.add('show');
+                }, 500);
+                
+                // Masquer l'animation après 6 secondes
+                setTimeout(function() {
+                    console.log('Removing show class...');
+                    birthdayToast.classList.remove('show');
+                }, 6500);
+            } else {
+                console.log('Birthday toast NOT found!');
+            }
+        });
+    </script>
+    {% endif %}
 {% endblock %}

@@ -12,10 +12,19 @@ def sorties_en_cours(request):
     bateaux_disponibles = Bateau.objects.exclude(id__in=bateaux_en_sortie).filter(immobile=False).order_by('nom')
     form = SortieForm()
     form.fields["bateau"].queryset = bateaux_disponibles
+    
+    # Récupérer les rameurs dont c'est l'anniversaire aujourd'hui
+    anniversaires = Rameur.objects.filter(
+        actif=True,
+        date_naissance__day=today.day,
+        date_naissance__month=today.month
+    )
+    
     return render(request, "cahierDeSorties/sorties_en_cours.html", {
         "sorties": sorties,
         "today": today,
-        "form": form
+        "form": form,
+        "anniversaires": anniversaires
     })
 
 def ajouter_sortie(request):
