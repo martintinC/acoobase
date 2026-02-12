@@ -52,9 +52,25 @@ document.addEventListener("DOMContentLoaded", function() {
 
 document.addEventListener("DOMContentLoaded", function() {
     let form = document.getElementById("ajoutSortieForm");
+    let isSubmitting = false;  // Drapeau pour empêcher les doubles soumissions
+    
     if (form) {  // Vérifie que le formulaire existe avant d'ajouter l'eventListener
         form.addEventListener("submit", function(event) {
             event.preventDefault();
+            
+            // Empêcher les doubles soumissions
+            if (isSubmitting) {
+                return;
+            }
+            
+            isSubmitting = true;
+            let submitButton = form.querySelector('button[type="submit"]');
+            let originalButtonText = submitButton.textContent;
+            
+            // Désactiver le bouton et changer son texte
+            submitButton.disabled = true;
+            submitButton.textContent = "Enregistrement...";
+            
             let formData = new FormData(this);
 
             fetch(ajouterSortieUrl, {  // Utilise la variable définie dans le HTML
@@ -71,9 +87,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     location.reload();
                 } else {
                     alert("Erreur lors de l'ajout de la sortie !");
+                    // Réactiver le bouton en cas d'erreur
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalButtonText;
+                    isSubmitting = false;
                 }
             })
-            .catch(error => console.error("Erreur :", error));
+            .catch(error => {
+                console.error("Erreur :", error);
+                alert("Erreur de connexion. Veuillez réessayer.");
+                // Réactiver le bouton en cas d'erreur
+                submitButton.disabled = false;
+                submitButton.textContent = originalButtonText;
+                isSubmitting = false;
+            });
         });
     }
 });
@@ -107,11 +134,21 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".supprimer-sortie").forEach(button => {
         button.addEventListener("click", function (event) {
             event.stopPropagation();  // Empêcher la propagation du clic au `tr`
+            
+            // Empêcher les doubles clics
+            if (button.disabled) {
+                return;
+            }
+            
             let sortieId = this.getAttribute("data-sortie-id");
-
             let supprimerSortieUrl = supprimerSortieUrlBase.replace('0', sortieId);  // Remplacer '0' par l'ID de la sortie
 
             if (confirm("Voulez-vous vraiment supprimer cette sortie ?")) {
+                // Désactiver le bouton immédiatement après confirmation
+                button.disabled = true;
+                let originalButtonText = button.textContent;
+                button.textContent = "⏳ Suppression...";
+                
                 fetch(supprimerSortieUrl, {  // Utilisation de l'URL correcte
                     method: "POST",
                     headers: {
@@ -124,9 +161,18 @@ document.addEventListener("DOMContentLoaded", function () {
                         location.reload();  // Recharger la page
                     } else {
                         alert("Erreur lors de la suppression !");
+                        // Réactiver le bouton en cas d'erreur
+                        button.disabled = false;
+                        button.textContent = originalButtonText;
                     }
                 })
-                .catch(error => console.error("Erreur :", error));
+                .catch(error => {
+                    console.error("Erreur :", error);
+                    alert("Erreur de connexion. Veuillez réessayer.");
+                    // Réactiver le bouton en cas d'erreur
+                    button.disabled = false;
+                    button.textContent = originalButtonText;
+                });
             }
         });
     });
@@ -138,6 +184,12 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll(".valider-sortie").forEach(button => {
         button.addEventListener("click", function (event) {
             event.stopPropagation();  // Empêcher la propagation du clic au `tr`
+            
+            // Empêcher les doubles clics
+            if (button.disabled) {
+                return;
+            }
+            
             let sortieId = this.getAttribute("data-sortie-id");
             let kilometres = document.getElementById("distance_" + sortieId).value;
 
@@ -145,6 +197,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Veuillez entrer un nombre de kilomètres valide.");
                 return;
             }
+
+            // Désactiver le bouton immédiatement
+            button.disabled = true;
+            let originalButtonText = button.textContent;
+            button.textContent = "⏳ Validation...";
 
             let finSortie = new Date();  // Heure actuelle pour la fin de la sortie
             let heures = finSortie.getHours().toString().padStart(2, "0");
@@ -169,9 +226,18 @@ document.addEventListener("DOMContentLoaded", function () {
                     location.reload();  // Recharger la page pour mettre à jour la sortie
                 } else {
                     alert("Erreur lors de l'enregistrement des données !");
+                    // Réactiver le bouton en cas d'erreur
+                    button.disabled = false;
+                    button.textContent = originalButtonText;
                 }
             })
-            .catch(error => console.error("Erreur :", error));
+            .catch(error => {
+                console.error("Erreur :", error);
+                alert("Erreur de connexion. Veuillez réessayer.");
+                // Réactiver le bouton en cas d'erreur
+                button.disabled = false;
+                button.textContent = originalButtonText;
+            });
         });
     });
 });
